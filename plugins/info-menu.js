@@ -71,7 +71,7 @@ try {
 📅 Fecha: ${fecha} | ${hora}
 
 ┌─『 𝐂𝐀𝐍𝐀𝐋 𝐎𝐅𝐈𝐂𝐈𝐀𝐋 』─┐
-│ https://whatsapp.com/channel/0029Vb7h1qC65yDEhghegc2O
+│ https://chat.whatsapp.com/GdBFa3UqUvzBFx4kXJtjGN?s=cl&p=a&ilr=0&amv=1
 └────────────────────────────┘
 `.trim() + '\n\n'
 
