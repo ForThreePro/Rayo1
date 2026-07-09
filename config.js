@@ -5,7 +5,7 @@ import { fileURLToPath } from "url"
 global.botNumber = ""
 
 global.owner = [
-  ["519369o4155", "Whois 👑", true],
+  ["51936994155", "Whois 👑", true],
   ["51904937048", "Bot 1", true],
   ["51930858072", "Bot 2", true]
 ]
