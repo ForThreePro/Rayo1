@@ -55,7 +55,7 @@ let handler = async (m, { conn }) => {
 handler.help = ['creador', 'owner']
 handler.tags = ['info']
 handler.command = /^(creador|owner)$/i  // Acepta .creador .owner .Creador
-handler.group = false
-handler.private = true
+handler.group = true
+handler.private = false
 
 export default handler
