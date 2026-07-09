@@ -51,7 +51,7 @@ let handler = async (m, { conn }) => {
 }
 
 handler.help = ['precios', 'catalogo']
-handler.tags = ['info']
+handler.tags = ['ventas']
 handler.command = /^(precios|catalogo|lista)$/i
 
 export default handler
