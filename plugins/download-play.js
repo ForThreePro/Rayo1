@@ -9,12 +9,19 @@ import fetch from 'node-fetch';
 
 const isUrl = (text) => /^https?:\/\/(www\.)?(youtube\.com|youtu\.be)\/[^\s]+$/i.test(text)
 
+// Función para barra de carga
+const loadingBar = (p) => {
+    const full = 10
+    const filled = Math.round(full * p / 100)
+    const empty = full - filled
+    return '█'.repeat(filled) + '▒'.repeat(empty) + ` ${p}%`
+}
+
 const handler = async (m, { conn, text }) => {
   if (!text) {
     await conn.sendMessage(m.chat, { react: { text: '⚠️', key: m.key } });
-
     return m.reply(`
-  ╭─ׅ─ׅ┈ ─๋︩︪─❖─๋︩︪─┈─ׅ─ׅ╮
+╭─ׅ─ׅ┈ ─๋︩︪─❖─๋︩︪─┈─ׅ─ׅ╮
 ╭╼☁️ 𝐘𝐎𝐔𝐓𝐔𝐁𝐄 𝐏𝐋𝐀𝐘 ☁️╮
 ┃֪࣪
 ├ׁ̟̇❍✎ Ingresa el nombre de la música
@@ -23,17 +30,24 @@ const handler = async (m, { conn, text }) => {
 `.trim());
   }
 
-  try {
-    await conn.sendMessage(m.chat, { react: { text: '⏳', key: m.key } });
+  let waitMsg = await conn.sendMessage(m.chat, { 
+    text: `╭─ׅ─ׅ┈ ─๋︩︪─❖─๋︩︪─┈─ׅ─ׅ╮
+╭╼⚡ 𝗕𝗨𝗦𝗖𝗔𝗡𝗗𝗢 ⚡╮
+┃֪࣪
+├ׁ̟̇❍✎ ${loadingBar(0)}
+├ׁ̟̇❍✎ Buscando: ${text}
+╰─ׅ─ׅ┈ ─๋︩︪─❖─๋︩︪─┈─ׅ─ׅ╯`
+  }, { quoted: m });
 
+  await conn.sendMessage(m.chat, { react: { text: '⏳', key: m.key } });
+
+  try {
     let link, title = 'YouTube', channel = '-', duration = '-', imageUrl = null
 
     if (isUrl(text)) {
       link = text
-
       const res = await fetch(`${api.url}/search/youtube?q=${encodeURIComponent(text)}&apikey=${api.key}`);
       const json = await res.json();
-
       if (json.status && json.result?.length) {
         const data = json.result[0]
         title = data.title
@@ -44,20 +58,11 @@ const handler = async (m, { conn, text }) => {
     } else {
       const res = await fetch(`${api.url}/search/youtube?q=${encodeURIComponent(text)}&apikey=${api.key}`);
       const json = await res.json();
-
       if (!json.status || !json.result?.length) {
         await conn.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
-
-        return m.reply(`
-  ╭─ׅ─ׅ┈ ─๋︩︪─❖─๋︩︪─┈─ׅ─ׅ╮
-╭╼☁️ 𝐒𝐈𝐍 𝐑𝐄𝐒𝐔𝐋𝐓𝐀𝐃𝐎𝐒 ☁️╮
-┃֪࣪
-├ׁ̟̇❍✎ No se encontró coincidencia
-├ׁ̟̇❍✎ Intenta otro nombre
-╰─ׅ─ׅ┈ ─๋︩︪─❖─๋︩︪─┈─ׅ─ׅ╯
-`.trim());
+        await conn.sendMessage(m.chat, { delete: waitMsg.key })
+        return m.reply(`No se encontró: ${text}`)
       }
-
       const data = json.result[0]
       link = data.link
       title = data.title
@@ -66,16 +71,17 @@ const handler = async (m, { conn, text }) => {
       imageUrl = data.imageUrl
     }
 
+    await conn.sendMessage(m.chat, { delete: waitMsg.key }) // Borra el "buscando"
+
     const caption = `
-  ╭─ׅ─ׅ┈ ─๋︩︪─❖─๋︩︪─┈─ׅ─ׅ╮
+╭─ׅ─ׅ┈ ─๋︩︪─❖─๋︩︪─┈─ׅ─ׅ╮
 ╭╼☁️ 𝐘𝐎𝐔𝐓𝐔𝐁𝐄 ☁️╮
 ┃֪࣪
 ├ׁ̟̇❍✎ ❖ ${title}
 ├ׁ̟̇❍✎ ✿ Canal: ${channel}
 ├ׁ̟̇❍✎ ⏱️ Duración: ${duration}
 ┃֪࣪
-├ׁ̟̇❍✎ 🔗 Link:
-├ׁ̟̇❍✎ ${link}
+├ׁ̟̇❍✎ 🔗 Link: ${link}
 ╰─ׅ─ׅ┈ ─๋︩︪─❖─๋︩︪─┈─ׅ─ׅ╯
 
 ✰ Selecciona una opción
@@ -98,16 +104,9 @@ const handler = async (m, { conn, text }) => {
     await conn.sendMessage(m.chat, message, { quoted: m });
 
   } catch (e) {
+    await conn.sendMessage(m.chat, { delete: waitMsg.key })
     await conn.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
-
-    m.reply(`
-  ╭─ׅ─ׅ┈ ─๋︩︪─❖─๋︩︪─┈─ׅ─ׅ╮
-╭╼☁️ 𝐄𝐑𝐑𝐎𝐑 ☁️╮
-┃֪࣪
-├ׁ̟̇❍✎ No se pudo procesar la solicitud
-├ׁ̟̇❍✎ Intenta nuevamente
-╰─ׅ─ׅ┈ ─๋︩︪─❖─๋︩︪─┈─ׅ─ׅ╯
-`.trim());
+    m.reply(`Error al buscar`)
   }
 };
 
@@ -116,9 +115,16 @@ handler.before = async (m, { conn }) => {
   if (!id) return;
 
   try {
-
     if (id.startsWith('audio_')) {
       const link = id.replace('audio_', '');
+      let waitMsg = await conn.sendMessage(m.chat, { 
+        text: `╭─ׅ─ׅ┈ ─๋︩︪─❖─๋︩︪─┈─ׅ─ׅ╮
+╭╼⚡ 𝗗𝗘𝗦𝗖𝗔𝗥𝗚𝗔𝗡𝗗𝗢 𝗔𝗨𝗗𝗜𝗢 ⚡╮
+┃֪࣪
+├ׁ̟̇❍✎ ${loadingBar(0)}
+├ׁ̟̇❍✎ Esto puede tardar 10-20s
+╰─ׅ─ׅ┈ ─๋︩︪─❖─๋︩︪─┈─ׅ─ׅ╯`
+      }, { quoted: m });
 
       await conn.sendMessage(m.chat, { react: { text: '⏳', key: m.key } });
 
@@ -126,19 +132,13 @@ handler.before = async (m, { conn }) => {
       const json = await res.json();
 
       if (!json.status || !json.result?.url) {
+        await conn.sendMessage(m.chat, { delete: waitMsg.key })
         await conn.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
-
-        return m.reply(`
-  ╭─ׅ─ׅ┈ ─๋︩︪─❖─๋︩︪─┈─ׅ─ׅ╮
-╭╼☁️ 𝐀𝐔𝐃𝐈𝐎 ☁️╮
-┃֪࣪
-├ׁ̟̇❍✎ No disponible
-├ׁ̟̇❍✎ Intenta otro video
-╰─ׅ─ׅ┈ ─๋︩︪─❖─๋︩︪─┈─ׅ─ׅ╯
-`.trim());
+        return m.reply(`Audio no disponible`)
       }
 
       const data = json.result;
+      await conn.sendMessage(m.chat, { delete: waitMsg.key })
 
       await conn.sendMessage(m.chat, { react: { text: '✅', key: m.key } });
 
@@ -146,108 +146,75 @@ handler.before = async (m, { conn }) => {
         audio: { url: data.url },
         mimetype: 'audio/mpeg',
         fileName: `${(data.title || 'audio').replace(/[^\w\s]/gi, '')}.mp3`,
-        caption: `
-  ╭─ׅ─ׅ┈ ─๋︩︪─❖─๋︩︪─┈─ׅ─ׅ╮
+        caption: `╭─ׅ─ׅ┈ ─๋︩︪─❖─๋︩︪─┈─ׅ─ׅ╮
 ╭╼☁️ 𝐀𝐔𝐃𝐈𝐎 ☁️╮
 ┃֪࣪
 ├ׁ̟̇❍✎ ${data.title || 'Audio'}
 ├ׁ̟̇❍✎ ⏱️ ${data.info?.duration || 'Desconocido'}
-├ׁ̟̇❍✎ ⚡ ${data.quality} kbps
-╰─ׅ─ׅ┈ ─๋︩︪─❖─๋︩︪─┈─ׅ─ׅ╯
-`.trim()
+╰─ׅ─ׅ┈ ─๋︩︪─❖─๋︩︪─┈─ׅ─ׅ╯`
       }, { quoted: m });
     }
 
-
-
     if (id.startsWith('video_')) {
-  const link = id.replace('video_', '')
+      const link = id.replace('video_', '')
+      let waitMsg = await conn.sendMessage(m.chat, { 
+        text: `╭─ׅ─ׅ┈ ─๋︩︪─❖─๋︩︪─┈─ׅ─ׅ╮
+╭╼⚡ 𝗗𝗘𝗦𝗖𝗔𝗥𝗚𝗔𝗡𝗗𝗢 𝗩𝗜𝗗𝗘𝗢 ⚡╮
+┃֪࣪
+├ׁ̟̇❍✎ ${loadingBar(0)}
+├ׁ̟̇❍✎ Procesando con ffmpeg...
+├ׁ̟̇❍✎ Tarda 30-60s según duración
+╰─ׅ─ׅ┈ ─๋︩︪─❖─๋︩︪─┈─ׅ─ׅ╯`
+      }, { quoted: m });
 
-  await conn.sendMessage(m.chat, {
-    react: { text: '⏳', key: m.key }
-  })
+      await conn.sendMessage(m.chat, { react: { text: '⏳', key: m.key } });
 
-  const res = await fetch(
-    `${api.url}/download/test?url=${encodeURIComponent(link)}&quality=240&apikey=${api.key}`
-  )
+      const res = await fetch(`${api.url}/download/test?url=${encodeURIComponent(link)}&quality=240&apikey=${api.key}`)
+      const json = await res.json()
 
-  const json = await res.json()
+      if (!json.status || !json.result?.url) {
+        await conn.sendMessage(m.chat, { delete: waitMsg.key })
+        await conn.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
+        return m.reply('No se pudo obtener el video.')
+      }
 
-  if (!json.status || !json.result?.url) {
-    await conn.sendMessage(m.chat, {
-      react: { text: '❌', key: m.key }
-    })
+      const data = json.result
+      const videoRes = await fetch(data.url)
+      if (!videoRes.ok) throw new Error('VIDEO_DOWNLOAD_FAILED')
 
-    return m.reply('No se pudo obtener el video.')
-  }
+      const inputPath = path.join(os.tmpdir(), `yt_${Date.now()}.mp4`)
+      const outputPath = path.join(os.tmpdir(), `wa_${Date.now()}.mp4`)
 
-  const data = json.result
+      fs.writeFileSync(inputPath, Buffer.from(await videoRes.arrayBuffer()))
 
-  const videoRes = await fetch(data.url)
+      await execAsync(`ffmpeg -y -i "${inputPath}" -c:v libx264 -c:a aac -movflags +faststart "${outputPath}"`)
 
-  if (!videoRes.ok) {
-    throw new Error('VIDEO_DOWNLOAD_FAILED')
-  }
+      const finalBuffer = fs.readFileSync(outputPath)
+      await conn.sendMessage(m.chat, { delete: waitMsg.key })
 
-  const inputPath = path.join(
-    os.tmpdir(),
-    `yt_${Date.now()}.mp4`
-  )
+      await conn.sendMessage(m.chat, { react: { text: '✅', key: m.key } });
 
-  const outputPath = path.join(
-    os.tmpdir(),
-    `wa_${Date.now()}.mp4`
-  )
+      await conn.sendMessage(m.chat, {
+        video: finalBuffer,
+        mimetype: 'video/mp4',
+        fileName: `${(data.info?.title || 'video').replace(/[^\w\s]/gi, '')}.mp4`,
+      }, { quoted: m });
 
-  fs.writeFileSync(
-    inputPath,
-    Buffer.from(await videoRes.arrayBuffer())
-  )
+      try {
+        if (fs.existsSync(inputPath)) fs.unlinkSync(inputPath)
+        if (fs.existsSync(outputPath)) fs.unlinkSync(outputPath)
+      } catch {}
+    }
 
-  await execAsync(
-    `ffmpeg -y -i "${inputPath}" -c:v libx264 -c:a aac -movflags +faststart "${outputPath}"`
-  )
-
-  const finalBuffer = fs.readFileSync(outputPath)
-
-  await conn.sendMessage(m.chat, {
-    react: { text: '✅', key: m.key }
-  })
-
-  await conn.sendMessage(
-    m.chat,
-    {
-      video: finalBuffer,
-      mimetype: 'video/mp4',
-      fileName: `${(data.info?.title || 'video')
-        .replace(/[^\w\s]/gi, '')}.mp4`,
-     
-    },
-    { quoted: m }
-  )
-
-  try {
-  if (fs.existsSync(inputPath)) fs.unlinkSync(inputPath)
-  if (fs.existsSync(outputPath)) fs.unlinkSync(outputPath)
-} catch {}
- }
-
-      
- } catch (e) {
+  } catch (e) {
     console.error(e)
-
-    await conn.sendMessage(m.chat, {
-      react: { text: '❌', key: m.key }
-    })
-
-    m.reply(`
-╭─ׅ─ׅ┈ ─๋︩︪─❖─๋︩︪─┈─ׅ─ׅ╮
-╭╼☁️ 𝐄𝐑𝐑𝐎𝐑 ☁️╮
+    await conn.sendMessage(m.chat, { react: { text: '❌', key: m.key } })
+    m.reply(`╭─ׅ─ׅ┈ ─๋︩︪─❖─๋︩︪─┈─ׅ─ׅ╮
+╭╼☁️ 𝐄𝐑𝐎𝐑 ☁️╮
 ┃֪࣪
 ├ׁ̟̇❍✎ Fallo inesperado
 ├ׁ̟̇❍✎ Intenta nuevamente
-╰─ׅ─ׅ┈ ─๋︩︪─❖─๋︩︪─┈─ׅ─ׅ╯
-`.trim())
+╰─ׅ─ׅ┈ ─๋︩︪─❖─๋︩︪─┈─ׅ─ׅ╯`)
   }
 }
 
