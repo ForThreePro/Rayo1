@@ -1,9 +1,11 @@
 let handler = async (m, { conn }) => {
     
-    let texto = `
+    const bannerVentas = 'https://files.evogb.win/91Vvmc.jpg' // Tu QR/foto
+
+    let catalogo = `
 ╔═══『🔥 CATALOGO TEAM NIGHTWISH 🔥』═══╗
-     SERVICIOS DIGITALES 24/7
-╚══════════╝
+       SERVICIOS DIGITALES 24/7
+╚══════════════════╝
 
 ┌─[ BOTS WHATSAPP ]─┐
 │ 
@@ -12,7 +14,7 @@ let handler = async (m, { conn }) => {
 │ Incluye: Menu, Bienvenida, Anti-link
 │
 │ ⚡ BOT PREMIUM CON IA
-│ Precio: S/30
+│ Precio: S/30  
 │ Incluye: GPT-4, Descargas, Juegos
 │
 └───────────────────┘
@@ -43,15 +45,19 @@ let handler = async (m, { conn }) => {
 │ Plin: 936994155
 └─────────────────────┘
 
-> Para comprar usa: .pago
+> Para comprar: .pago
 > Soporte: .creador
 `.trim()
 
-    await conn.reply(m.chat, texto, m)
+    await conn.sendMessage(m.chat, {
+        image: { url: bannerVentas },
+        caption: catalogo,
+        footer: 'TEAM NIGHTWISH | Entrega Inmediata'
+    }, { quoted: m })
 }
 
 handler.help = ['precios', 'catalogo']
-handler.tags = ['ventas']
+handler.tags = ['ventas'] // <- Para que salga en la categoria VENTAS
 handler.command = /^(precios|catalogo|lista)$/i
 
 export default handler
