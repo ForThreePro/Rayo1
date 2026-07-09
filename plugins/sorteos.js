@@ -20,8 +20,8 @@ let handler = async (m, { conn, args, isAdmin }) => {
 
     const dias = ['domingo','lunes','martes','miercoles','jueves','viernes','sabado']
     let hoy = dias[moment.tz('America/Lima').day()]
-    let comando = args[0]?.toLowerCase()
-    let textoCompleto = args.slice(1).join(' ') // agarra todo después del comando
+    let comando = (args[0] || '').toLowerCase()
+    let textoCompleto = args.slice(1).join(' ')
 
     // ==========.v ==========
     if (comando === 'v') {
@@ -34,27 +34,21 @@ let handler = async (m, { conn, args, isAdmin }) => {
 ┌─[ 𝗟𝗨𝗡𝗘𝗦 ]─┐
 ${lista.lunes.length? lista.lunes.map((u,i) => `│ ${i+1}. ${u.nombre} | ${u.numero} | ${u.premio}`).join('\n') : '│ Vacío'}
 └────────────┘
-
 ┌─[ 𝗠𝗔𝗥𝗧𝗘𝗦 ]─┐
 ${lista.martes.length? lista.martes.map((u,i) => `│ ${i+1}. ${u.nombre} | ${u.numero} | ${u.premio}`).join('\n') : '│ Vacío'}
 └──────────────┘
-
 ┌─[ 𝗠𝗜𝗘𝗥𝗖𝗢𝗟𝗘𝗦 ]─┐
 ${lista.miercoles.length? lista.miercoles.map((u,i) => `│ ${i+1}. ${u.nombre} | ${u.numero} | ${u.premio}`).join('\n') : '│ Vacío'}
 └──────────────────┘
-
 ┌─[ 𝗝𝗨𝗘𝗩𝗘𝗦 ]─┐
 ${lista.jueves.length? lista.jueves.map((u,i) => `│ ${i+1}. ${u.nombre} | ${u.numero} | ${u.premio}`).join('\n') : '│ Vacío'}
 └──────────────┘
-
 ┌─[ 𝗩𝗜𝗘𝗥𝗡𝗘𝗦 ]─┐
 ${lista.viernes.length? lista.viernes.map((u,i) => `│ ${i+1}. ${u.nombre} | ${u.numero} | ${u.premio}`).join('\n') : '│ Vacío'}
 └───────────────┘
-
 ┌─[ 𝗦𝗔𝗕𝗔𝗗𝗢 ]─┐
 ${lista.sabado.length? lista.sabado.map((u,i) => `│ ${i+1}. ${u.nombre} | ${u.numero} | ${u.premio}`).join('\n') : '│ Vacío'}
 └──────────────┘
-
 ┌─[ 𝗘𝗫𝗧𝗥𝗔 ]─┐
 ${lista.extra.length? lista.extra.map((u,i) => `│ ${i+1}. ${u.nombre} | ${u.numero} | ${u.premio}`).join('\n') : '│ Vacío'}
 └────────────┘
@@ -69,10 +63,10 @@ ${REGLAS}`.trim()
 
         let partes = textoCompleto.split('/').map(s => s.trim())
         let nombre = partes[0]
-        let numero = partes[1]?.replace(/[^0-9]/g, '') // quita +, espacios
+        let numero = partes[1]?.replace(/[^0-9]/g, '')
         let premio = partes[2]
 
-        if (!nombre ||!numero ||!premio) return conn.reply(m.chat, `Ejemplo:\n.list Whois / +51 936 994 155 / Bot mensual\n${REGLAS}`, m)
+        if (!nombre ||!numero ||!premio) return conn.reply(m.chat, `Ejemplo:\n.list Whois / +51 936 994 155 / Bot mensual\n\n${REGLAS}`, m)
 
         let entrada = {nombre, numero, premio}
         for (let d of Object.keys(data[gid])) {
@@ -125,4 +119,4 @@ handler.tags = ['sorteos']
 handler.command = /^(v|list|extra|del)$/i
 handler.group = true
 
-export default handler
+export default handler // ESTA LINEA ES CLAVE
