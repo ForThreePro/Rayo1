@@ -5,6 +5,13 @@ const db = './database/listas.json'
 if (!fs.existsSync('./database')) fs.mkdirSync('./database')
 if (!fs.existsSync(db)) fs.writeFileSync(db, '{}')
 
+const REGLAS = `Comandos:
+.v = Ver lista
+.list Nombre / Numero / Premio
+.extra Nombre / Numero / Premio
+.del Numero
+ ̶ ̶ ̶ ̶ ̶ ̶`
+
 let handler = async (m, { conn, args, isAdmin }) => {
     let data = JSON.parse(fs.readFileSync(db))
     let gid = m.chat
@@ -14,6 +21,7 @@ let handler = async (m, { conn, args, isAdmin }) => {
     const dias = ['domingo','lunes','martes','miercoles','jueves','viernes','sabado']
     let hoy = dias[moment.tz('America/Lima').day()]
     let comando = args[0]?.toLowerCase()
+    let textoCompleto = args.slice(1).join(' ') // agarra todo después del comando
 
     // ==========.v ==========
     if (comando === 'v') {
@@ -51,67 +59,68 @@ ${lista.sabado.length? lista.sabado.map((u,i) => `│ ${i+1}. ${u.nombre} | ${u.
 ${lista.extra.length? lista.extra.map((u,i) => `│ ${i+1}. ${u.nombre} | ${u.numero} | ${u.premio}`).join('\n') : '│ Vacío'}
 └────────────┘
 
->.list Nombre Numero Premio
->.extra Nombre Numero Premio
->.del Numero = Borrar - Solo Admin
-`.trim()
+${REGLAS}`.trim()
         return conn.sendMessage(m.chat, { text: texto }, { quoted: m })
     }
 
     // ==========.list ==========
     if (comando === 'list') {
         if (hoy === 'domingo') return conn.reply(m.chat, '❌ Domingo no hay sorteos', m)
-        let nombre = args[1]
-        let numero = args[2]
-        let premio = args.slice(3).join(' ')
-        if (!nombre ||!numero ||!premio) return conn.reply(m.chat, `Ejemplo:\n.list Whois Bot 51936994155 50 soles`, m)
+
+        let partes = textoCompleto.split('/').map(s => s.trim())
+        let nombre = partes[0]
+        let numero = partes[1]?.replace(/[^0-9]/g, '') // quita +, espacios
+        let premio = partes[2]
+
+        if (!nombre ||!numero ||!premio) return conn.reply(m.chat, `Ejemplo:\n.list Whois / +51 936 994 155 / Bot mensual\n${REGLAS}`, m)
 
         let entrada = {nombre, numero, premio}
-
-        // Borrar si ya estaba por número
         for (let d of Object.keys(data[gid])) {
             data[gid][d] = data[gid][d].filter(u => u.numero!== numero)
         }
-        // Agregar a hoy
         data[gid][hoy].push(entrada)
         fs.writeFileSync(db, JSON.stringify(data, null, 2))
-        return conn.reply(m.chat, `✅ ${nombre} | ${numero} | ${premio}\nAnotado para *${hoy.toUpperCase()}*`, m)
+
+        return conn.reply(m.chat, `✅ ${nombre} | ${numero} | ${premio}\nAnotado para *${hoy.toUpperCase()}*\n\n${REGLAS}`, m)
     }
 
     // ==========.extra ==========
     if (comando === 'extra') {
-        let nombre = args[1]
-        let numero = args[2]
-        let premio = args.slice(3).join(' ')
-        if (!nombre ||!numero ||!premio) return conn.reply(m.chat, `Ejemplo:\n.extra Juan 987654321 Bot`, m)
+        let partes = textoCompleto.split('/').map(s => s.trim())
+        let nombre = partes[0]
+        let numero = partes[1]?.replace(/[^0-9]/g, '')
+        let premio = partes[2]
+
+        if (!nombre ||!numero ||!premio) return conn.reply(m.chat, `Ejemplo:\n.extra Juan / +51 999 888 777 / Bot VIP\n\n${REGLAS}`, m)
 
         let entrada = {nombre, numero, premio}
-
         for (let d of Object.keys(data[gid])) {
             data[gid][d] = data[gid][d].filter(u => u.numero!== numero)
         }
         data[gid].extra.push(entrada)
         fs.writeFileSync(db, JSON.stringify(data, null, 2))
-        return conn.reply(m.chat, `✅ ${nombre} | ${numero} | ${premio}\nAnotado en *EXTRA*`, m)
+
+        return conn.reply(m.chat, `✅ ${nombre} | ${numero} | ${premio}\nAnotado en *EXTRA*\n\n${REGLAS}`, m)
     }
 
     // ==========.del ==========
     if (comando === 'del') {
         if (!isAdmin) return conn.reply(m.chat, '❌ Solo admins pueden borrar', m)
-        let numero = args[1]
-        if (!numero) return conn.reply(m.chat, 'Ejemplo:.del 51936994155', m)
+        let numero = args[1]?.replace(/[^0-9]/g, '')
+        if (!numero) return conn.reply(m.chat, REGLAS, m)
 
         for (let d of Object.keys(data[gid])) {
             data[gid][d] = data[gid][d].filter(u => u.numero!== numero)
         }
         fs.writeFileSync(db, JSON.stringify(data, null, 2))
-        return conn.reply(m.chat, `🗑️ ${numero} eliminado de la lista`, m)
+
+        return conn.reply(m.chat, `🗑️ ${numero} eliminado de la lista\n${REGLAS}`, m)
     }
 
-    conn.reply(m.chat, `Comandos:\n.v = Ver lista\n.list Nombre Numero Premio\n.extra Nombre Numero Premio\n.del Numero`, m)
+    return conn.reply(m.chat, REGLAS, m)
 }
 
-handler.help = ['v', 'list Nombre Numero Premio', 'extra Nombre Numero Premio', 'del Numero']
+handler.help = ['v', 'list Nombre / Numero / Premio', 'extra Nombre / Numero / Premio', 'del Numero']
 handler.tags = ['sorteos']
 handler.command = /^(v|list|extra|del)$/i
 handler.group = true
