@@ -2,6 +2,12 @@ import moment from 'moment-timezone'
 import { getBotConfig } from '../lib/botconfig.js'
 
 const CATEGORY_META = {
+// ===== PRIORIDAD VENTAS =====
+ventas: '💰 𝐕𝐄𝐍𝐓𝐀𝐒', // 1ro
+sorteos: '🎁 𝐒𝐎𝐑𝐓𝐄𝐎𝐒', // 2do
+owner: '👑 𝐎𝐖𝐍𝐄𝐑', // 3to
+
+// ===== EL RESTO =====
 main: '⚡ 𝐌𝐀𝐈𝐍',
 rg: '👤 𝐑𝐄𝐆𝐈𝐒𝐓𝐑𝐎',
 info: 'ℹ️ 𝐈𝐍𝐅𝐎',
@@ -17,10 +23,9 @@ gacha: '🎁 𝐆𝐀𝐂𝐇𝐀',
 text: '✨ 𝐄𝐅𝐄𝐂𝐓𝐎𝐒',
 rpg: '💰 𝐄𝐂𝐎𝐍𝐎𝐌𝐈𝐀',
 sticker: '🏷️ 𝐒𝐓𝐈𝐂𝐊𝐄𝐑𝐒',
-tools: '🛠️ 𝐇𝐄𝐑𝐑𝐀𝐌𝐈𝐄𝐍𝐓𝐀𝐒',
+tools: '🛠️ 𝐇𝐄𝐑𝐀𝐌𝐈𝐄𝐍𝐓𝐀𝐒',
 nsfw: '🔞 𝐍𝐒𝐅𝐖',
 serbot: '📱 𝐒𝐔𝐁 𝐁𝐎𝐓𝐒',
-owner: '👑 𝐎𝐖𝐍𝐄𝐑'
 }
 
 let handler = async (m, { conn }) => {
@@ -30,7 +35,7 @@ try {
     const pluginsActivos = Object.values(global.plugins || {}).filter(p =>!p?.disabled)
     const pluginsCount = pluginsActivos.length
 
-    const fecha = moment.tz('America/Lima').format('DD/MM/YYYY') // Cambié a Lima
+    const fecha = moment.tz('America/Lima').format('DD/MM/YYYY')
     const hora = moment.tz('America/Lima').format('hh:mm A')
 
     const byTag = {}
@@ -56,7 +61,6 @@ try {
     const isMainBot = mainBotJid && currentBotJid && mainBotJid === currentBotJid
     const botType = isMainBot? 'PREMIUM' : 'FREE'
 
-    // HEADER CYBER
     let menuTexto = `
 ╔═══『⚡ ${botnameConfig} ⚡』═══╗
     𝗦𝗜𝗦𝗧𝗘𝗠𝗔 𝗗𝗘 𝗖𝗢𝗠𝗔𝗡𝗗𝗢𝗦
@@ -71,24 +75,20 @@ try {
 └────────────────────────────┘
 `.trim() + '\n\n'
 
-    // CUERPO POR CATEGORIAS
     for (const tag of Object.keys(CATEGORY_META)) {
         const set = byTag[tag]
         if (!set || set.size === 0) continue
-
         const cmds = [...set].sort()
-
         menuTexto += `┌─『 ${CATEGORY_META[tag]} 』─┐\n`
         menuTexto += cmds.map(c => `│ ❖.${c}`).join('\n') + '\n'
         menuTexto += `└───────────────────┘\n\n`
     }
 
-    // FOOTER
     menuTexto += `
 ┌─『 𝐈𝐍𝐅𝐎 𝐔𝐓𝐈𝐋 』─┐
 │.creador » Hablar con Admin
 │.pago » Comprar Bot/Web
-│.catalogo » Ver Precios
+│.precios » Ver Catalogo
 └──────────────────┘
 
 > Desarrollado por Whois 💙 TEAM NIGHTWISH
