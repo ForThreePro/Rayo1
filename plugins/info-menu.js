@@ -91,11 +91,11 @@ try {
 │.catalogo » Ver Precios
 └──────────────────┘
 
-> Desarrollado por Carlos 💙 TEAM NIGHTWISH
+> Desarrollado por Whois 💙 TEAM NIGHTWISH
 `.trim()
 
     await conn.sendMessage(m.chat, {
-        image: { url: getBotConfig(conn, 'banner2') || 'https://i.imgur.com/2M4lHcg.png' },
+        image: { url: getBotConfig(conn, 'banner2') || 'https://files.evogb.win/91Vvmc.jpg' },
         caption: menuTexto,
         footer: `TEAM NIGHTWISH | ${pluginsCount} Comandos Activos`
     }, { quoted: m })
