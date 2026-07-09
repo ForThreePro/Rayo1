@@ -42,6 +42,7 @@ ${lista.extra.length? lista.extra.map((u,i) => `│ ${i+1}. @${u.split('@')[0]}`
 └────────────┘
 
 > Usa.lista para anotarte hoy
+> Usa.extra para anotarte en extra
 > Usa.del @usuario para borrar - Solo Admin
 `.trim()
 
@@ -50,7 +51,7 @@ ${lista.extra.length? lista.extra.map((u,i) => `│ ${i+1}. @${u.split('@')[0]}`
         mentions: [...lista.lunes,...lista.martes,...lista.miercoles,...lista.jueves,...lista.viernes,...lista.sabado,...lista.extra]
     }, { quoted: m })
 }
-handler.help = ['ver', 'lista']
+handler.help = ['ver lista']
 handler.tags = ['sorteos']
-handler.command = /^(ver|verlista)$/i
+handler.command = /^(ver\s*lista)$/i // <- Ahora solo funciona con "ver lista"
 export default handler
