@@ -31,7 +31,7 @@ handler.before = async function (m, { conn }) {
 
     const admingp = `
 ╔═══『👑 𝗡𝗨𝗘𝗩𝗢 𝗔𝗗𝗠𝗜𝗡 👑』═══╗
-    𝗔𝗖𝗖𝗘𝗦𝗢 𝗡𝗜𝗩𝗘𝗟 𝗘𝗟𝗜𝗧𝗘
+    𝗔𝗖𝗘𝗦𝗢 𝗡𝗜𝗩𝗘𝗟 𝗘𝗟𝗜𝗧𝗘
 ╚═══『⚡ 𝗧𝗘𝗔𝗠 𝗡𝗜𝗚𝗛𝗧𝗪𝗜𝗦𝗛 ⚡』═══╝
 
 👤 Usuario: ${userTag}
@@ -39,7 +39,7 @@ handler.before = async function (m, { conn }) {
 
 📌 Promovido por: ${adminTag}
 
-━━━━━━━━━━━━━━━━━━
+━━━━━━━━━━
 ✨ Beneficios VIP:
 ├ 20% OFF en COMBO FULL
 ├ Acceso a comandos.panel
@@ -58,7 +58,7 @@ handler.before = async function (m, { conn }) {
 
 📌 Degradado por: ${adminTag}
 
-━━━━━━━━━━━━━━━━━━
+━━━━━━━━━━
 ❌ Ya no tiene acceso a:
 ├ Comandos de admin
 ├ Panel de control
@@ -84,11 +84,7 @@ handler.before = async function (m, { conn }) {
             image: { url: getBotConfig(conn, 'banner') || 'https://i.imgur.com/2M4lHcg.png' },
             caption: admingp,
             footer: 'TEAM NIGHTWISH | ADMIN PANEL',
-            buttons: [
-                {buttonId: '.panel', buttonText: {displayText: '⚙️ PANEL ADMIN'}, type: 1}
-            ],
-            headerType: 4,
-           ...context
+          ...context
         })
         return
     }
@@ -99,7 +95,7 @@ handler.before = async function (m, { conn }) {
             image: { url: getBotConfig(conn, 'banner') || 'https://i.imgur.com/2M4lHcg.png' },
             caption: noadmingp,
             footer: 'PERMISOS ACTUALIZADOS',
-           ...context
+          ...context
         })
         return
     }
