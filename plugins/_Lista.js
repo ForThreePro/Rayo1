@@ -1,105 +1,104 @@
 import fs from 'fs'
 import path from 'path'
 
-const diasSemana = ['domingo', 'lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado']
-const diasValidos = ['lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado', 'extra']
-const diasBorrar = ['lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado']
-const emojiDia = '-'
-const IMAGEN_FALLBACK = 'https://raw.githubusercontent.com/bandidope/Fotos/refs/heads/master/fotos/logo.png'
-const MARCA = 'For Three Bot'
+const dbPath = path.join('./database', 'sorteos.json')
+if (!fs.existsSync('./database')) fs.mkdirSync('./database')
+if (!fs.existsSync(dbPath)) fs.writeFileSync(dbPath, '{}')
+
+const DIAS = ['lunes','martes','miercoles','jueves','viernes','sabado']
 const TZ = 'America/Lima'
 
-const getDB = () => {
-  global.db.data.sorteo??= {lunes:[], martes:[], miercoles:[], jueves:[], viernes:[], sabado:[], extra:[]}
-  return global.db.data.sorteo
-}
+const REGLAS = `Comandos:
+.v = Ver lista
+.list Nombre / Numero / Premio
+.extra Nombre / Numero / Premio
+.del Numero
+ ̶ ̶ ̶ ̶ ̶ ̶`
 
+const cargarDB = () => {
+    return JSON.parse(fs.readFileSync(dbPath))
+}
+const guardarDB = (data) => {
+    fs.writeFileSync(dbPath, JSON.stringify(data, null, 2))
+}
 const getHoy = () => {
-  let diaES = new Date().toLocaleString('es-PE', { timeZone: TZ, weekday: 'long' }).toLowerCase()
-  diaES = diaES.normalize("NFD").replace(/[\u0300-\u036f]/g, "")
-  return {
-    diaReal: diaES,
-    diaDB: diaES === 'domingo'? 'extra' : diaES,
-    esDomingo: diaES === 'domingo'
-  }
+    let dia = new Date().toLocaleString('es-PE', {timeZone: TZ, weekday: 'long'}).toLowerCase()
+    dia = dia.normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+    return dia === 'domingo'? 'extra' : dia
 }
 
-let handler = async (m, { conn, text, args, isAdmin, isOwner }) => {
-  await conn.sendMessage(m.chat, { react: { text: '•', key: m.key } }).catch(_=>{})
+let handler = async (m, { conn, args, command, isAdmin }) => {
+    let gid = m.chat
+    let data = cargarDB()
+    if(!data[gid]) data[gid] = {lunes:[], martes:[], miercoles:[], jueves:[], viernes:[], sabado:[], extra:[]}
 
-  let db = getDB()
-  let sub = args[0]?.toLowerCase()
-  let { diaReal, diaDB, esDomingo } = getHoy()
+    let hoy = getHoy()
+    let texto = args.join(' ')
 
-  if(sub === 'ver' || sub === 'lista'){
-    let txt = `GANADORES\n»————————> • <————————«\n`
-    for(let dia of diasValidos){
-      txt += `\n${emojiDia} ${dia.charAt(0).toUpperCase() + dia.slice(1)}:\n`
-      if(db[dia]?.length > 0){
-        txt += db[dia].map((v,i)=> {
-          let emojiFinal = ''
-          if(v.tipo === 'domingo') emojiFinal = '🛒' // Domingo auto
-          if(v.tipo === 'manual') emojiFinal = '📦' // EXTRA manual
-          return `# ${v.nombre} / ${v.numero} / ${v.premio} ${emojiFinal}`.trim()
-        }).join('\n')
-      } else {
-        txt += `# (${MARCA})`
-      }
+    // =====.v =====
+    if(command === 'v'){
+        let msg = `╔═══『📋 LISTA SEMANAL』═══╗\n`
+        for(let d of [...DIAS, 'extra']){
+            msg += `\n┌─[ ${d.toUpperCase()} ]─┐\n`
+            if(data[gid][d].length === 0) msg += `│ Vacío\n`
+            else data[gid][d].forEach((u,i) => msg += `│ ${i+1}. ${u.nombre} | ${u.numero} | ${u.premio}\n`)
+            msg += `└────────────┘\n`
+        }
+        msg += `\n${REGLAS}`
+        return conn.reply(m.chat, msg, m)
     }
-    let imgGrupo = null
-    try { imgGrupo = await conn.profilePictureUrl(m.chat, 'image') } catch(e) { imgGrupo = IMAGEN_FALLBACK }
-    try { return await conn.sendMessage(m.chat, { image: { url: imgGrupo }, caption: txt.trim() }, { quoted: m }) }
-    catch(e) { return m.reply(`⚠️ Falló la imagen. Te mando solo texto:\n\n${txt.trim()}`) }
-  }
 
-  if(sub === 'eliminar' && args[1] === 'extras'){
-    if(!m.isGroup) return m.reply('⚠️ Este comando solo funciona en grupos.')
-    if(!isAdmin &&!isOwner) return m.reply('⚠️ Solo los *admins* del grupo pueden borrar.')
-    db.extra = []
-    await global.db.write()
-    return m.reply('🗑️ *EXTRA ELIMINADO*\nLista de EXTRA limpiada a 0.')
-  }
+    // =====.list =====
+    if(command === 'list'){
+        if(hoy === 'extra') return conn.reply(m.chat, '❌ Domingo se anota solo en.extra', m)
 
-  if(sub === 'eliminar'){
-    if(!m.isGroup) return m.reply('⚠️ Este comando solo funciona en grupos.')
-    if(!isAdmin &&!isOwner) return m.reply('⚠️ Solo los *admins* del grupo pueden borrar toda la lista.')
-    if(args[1]!== 'si') return m.reply(`⚠️ *PELIGRO*\nEsto borrará Lunes a Sábado.\n*EXTRA se queda intacto.*\n\nEscribe:.lista eliminar si\npara confirmar.`)
-    for(let dia of diasBorrar){ db[dia] = [] }
-    await global.db.write()
-    return m.reply('🗑️ *Lista Lunes-Sábado eliminada.*\n*EXTRA se mantuvo.*')
-  }
+        let [nombre, numero, premio] = texto.split('/').map(x => x.trim())
+        numero = numero?.replace(/[^0-9]/g, '')
 
-  if (!text.includes('/')) return m.reply(`🎯 *LISTA GRUPO SIN LÍMITE*
-.lista Nombre / Numero / Premio
-.lista Nombre / Numero / Premio / extra
-*Auto: ${diaDB.toUpperCase()}*
-.lista ver |.lista eliminar si |.lista eliminar extras`)
+        if(!nombre ||!numero ||!premio) return conn.reply(m.chat, `Ejemplo:\n.list Whois / +51 936 994 155 / Bot mensual\n${REGLAS}`, m)
 
-  let partes = text.split('/').map(v => v.trim())
-  let [nombre, numero, premio, diaForzado] = partes
-  let dia = diaForzado?.toLowerCase() === 'extra'? 'extra' : diaDB
+        // quitar duplicados
+        for(let d of Object.keys(data[gid])){
+            data[gid][d] = data[gid][d].filter(u => u.numero!== numero)
+        }
 
-  // [UPDATE] UPDATE: Si pones /extra manda manual siempre, aunque sea domingo
-  let tipo = dia === 'extra'? 'manual' : ''
+        data[gid][hoy].push({nombre, numero, premio})
+        guardarDB(data)
+        return conn.reply(m.chat, `✅ ${nombre} | ${numero} | ${premio}\nAnotado en *${hoy.toUpperCase()}*\n\n${REGLAS}`, m)
+    }
 
-  if (!nombre ||!numero ||!premio) {
-    return m.reply(`Formato mal.\nUsa:.lista Nombre / Numero / Premio`)
-  }
+    // =====.extra =====
+    if(command === 'extra'){
+        let [nombre, numero, premio] = texto.split('/').map(x => x.trim())
+        numero = numero?.replace(/[^0-9]/g, '')
 
-  numero = numero.replace(/\s/g, '')
+        if(!nombre ||!numero ||!premio) return conn.reply(m.chat, `Ejemplo:\n.extra Juan / 999888777 / 20 soles\n\n${REGLAS}`, m)
 
-  db[dia]??= []
-  db[dia].push({nombre, premio, numero, tipo})
-  await global.db.write()
+        for(let d of Object.keys(data[gid])){
+            data[gid][d] = data[gid][d].filter(u => u.numero!== numero)
+        }
 
-  let emojiTag = dia === 'extra'? (tipo === 'manual'? '📦' : '🛒') : '✅'
-  let msg = `${emojiTag} *Anotado en ${dia.toUpperCase()}*\n# ${nombre} / ${numero} / ${premio}`
+        data[gid].extra.push({nombre, numero, premio})
+        guardarDB(data)
+        return conn.reply(m.chat, `📦 ${nombre} | ${numero} | ${premio}\nAnotado en *EXTRA*\n\n${REGLAS}`, m)
+    }
 
-  m.reply(msg)
+    // =====.del =====
+    if(command === 'del'){
+        if(!isAdmin) return conn.reply(m.chat, '❌ Solo admins', m)
+        let numero = texto.replace(/[^0-9]/g, '')
+        if(!numero) return conn.reply(m.chat, REGLAS, m)
+
+        for(let d of Object.keys(data[gid])){
+            data[gid][d] = data[gid][d].filter(u => u.numero!== numero)
+        }
+        guardarDB(data)
+        return conn.reply(m.chat, `🗑️ ${numero} eliminado\n\n${REGLAS}`, m)
+    }
 }
 
-handler.help = ['lista']
-handler.tags = ['main']
-handler.command = /^lista$/i
+handler.help = ['v','list','extra','del']
+handler.tags = ['sorteos']
+handler.command = ['v','list','extra','del']
 handler.group = true
 export default handler
