@@ -58,6 +58,6 @@ let handler = async (m, { conn }) => {
 
 handler.help = ['precios', 'catalogo']
 handler.tags = ['ventas'] // <- Para que salga en la categoria VENTAS
-handler.command = /^(precios|catalogo|lista)$/i
+handler.command = /^(precios|catalogo)$/i
 
 export default handler
