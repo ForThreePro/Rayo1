@@ -99,7 +99,7 @@ let handler = async (m, { conn, args, command, isAdmin }) => {
     }
 }
 
-handler.help = ['v Ver esta lista','.list Nombre / Numero / Premio','extra Nombre / Numero / Premio','delall Borrar todo [Admin]']
+handler.help = ['v Ver esta lista','list Nombre / Numero / Premio','extra Nombre / Numero / Premio','delall Borrar todo [Admin]']
 handler.tags = ['sorteos']
 handler.command = ['v','list','extra','delall']
 handler.group = true
